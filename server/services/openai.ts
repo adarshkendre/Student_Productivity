@@ -2,12 +2,16 @@
 import OpenAI from "openai";
 import { ScheduleRequest } from "@shared/schema";
 
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY environment variable is required");
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function generateSchedule(request: ScheduleRequest): Promise<string> {
+const createPrompt = (request: ScheduleRequest): string => {
   const { wakeUpTime, sleepTime, goalTitle, goalDescription, targetDate } = request;
   
-  const prompt = `Create a detailed day-by-day learning schedule for the goal "${goalTitle}" that needs to be completed by ${targetDate}.
+  return `Create a detailed day-by-day learning schedule for the goal "${goalTitle}" that needs to be completed by ${targetDate}.
 
 Details:
 - Goal: ${goalDescription}
@@ -32,12 +36,19 @@ Format example:
     }
   }
 }`;
+};
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
-  });
+export async function generateSchedule(request: ScheduleRequest): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: createPrompt(request) }],
+      response_format: { type: "json_object" },
+    });
 
-  return response.choices[0].message.content;
+    return response.choices[0].message.content || '{}';
+  } catch (error) {
+    console.error('Error generating schedule:', error);
+    throw new Error('Failed to generate schedule. Please try again later.');
+  }
 }
