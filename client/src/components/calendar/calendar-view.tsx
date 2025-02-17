@@ -10,11 +10,16 @@ export default function CalendarView() {
   const { data: goals } = useQuery<Goal[]>({
     queryKey: ["/api/goals"],
   });
+  
+  const { data: schedules } = useQuery<Schedule[]>({
+    queryKey: ["/api/schedules"],
+  });
 
   const getEvents = useCallback(() => {
-    if (!goals) return [];
-
-    return goals.map(goal => ({
+    const events = [];
+    
+    if (goals) {
+      events.push(...goals.map(goal => ({
       id: `goal-${goal.id}`,
       title: goal.title,
       start: format(new Date(goal.targetDate), 'yyyy-MM-dd'),
@@ -25,8 +30,24 @@ export default function CalendarView() {
         specific: goal.specific,
         measurable: goal.measurable,
       },
-    }));
-  }, [goals]);
+    })));
+    }
+    
+    if (schedules) {
+      events.push(...schedules.map(schedule => ({
+        id: `schedule-${schedule.id}`,
+        title: 'Learning Schedule',
+        start: format(new Date(schedule.date), 'yyyy-MM-dd'),
+        allDay: true,
+        backgroundColor: '#10b981',
+        extendedProps: {
+          description: 'Daily learning schedule',
+        },
+      })));
+    }
+    
+    return events;
+  }, [goals, schedules]);
 
   return (
     <Card className="p-6">

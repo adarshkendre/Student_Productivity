@@ -53,11 +53,13 @@ Example format:
     console.log('AI Response:', text);
 
     try {
-      const parsed = JSON.parse(text);
+      // Remove markdown code block syntax if present
+      const cleanText = text.replace(/```json|\```/g, '').trim();
+      const parsed = JSON.parse(cleanText);
       return JSON.stringify(parsed);
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
-
+      
       // Try to extract JSON from the text
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
