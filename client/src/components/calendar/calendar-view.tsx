@@ -1,12 +1,20 @@
-import { useCallback } from 'react';
+
+import { useCallback, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { useQuery } from '@tanstack/react-query';
+import interactionPlugin from '@fullcalendar/interaction';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Goal, Schedule } from '@shared/schema';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CalendarView() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingEvent, setEditingEvent] = useState(null);
+
   const { data: goals } = useQuery<Goal[]>({
     queryKey: ["/api/goals"],
   });
@@ -15,22 +23,54 @@ export default function CalendarView() {
     queryKey: ["/api/schedules"],
   });
 
+  const updateScheduleMutation = useMutation({
+    mutationFn: async ({ id, date }: { id: number, date: string }) => {
+      return apiRequest('PUT', `/api/schedules/${id}`, { date });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
+      toast({
+        title: "Schedule updated",
+        description: "The schedule has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update schedule",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEventDrop = (eventDropInfo: any) => {
+    const { event } = eventDropInfo;
+    if (event.id.startsWith('schedule-')) {
+      const scheduleId = parseInt(event.id.split('-')[1]);
+      updateScheduleMutation.mutate({
+        id: scheduleId,
+        date: format(eventDropInfo.event.start, 'yyyy-MM-dd'),
+      });
+    }
+  };
+
   const getEvents = useCallback(() => {
     const events = [];
     
     if (goals) {
       events.push(...goals.map(goal => ({
-      id: `goal-${goal.id}`,
-      title: goal.title,
-      start: format(new Date(goal.targetDate), 'yyyy-MM-dd'),
-      allDay: true,
-      backgroundColor: goal.completed ? '#22c55e' : '#3b82f6',
-      extendedProps: {
-        description: goal.description,
-        specific: goal.specific,
-        measurable: goal.measurable,
-      },
-    })));
+        id: `goal-${goal.id}`,
+        title: goal.title,
+        start: format(new Date(goal.targetDate), 'yyyy-MM-dd'),
+        allDay: true,
+        backgroundColor: goal.completed ? '#22c55e' : '#3b82f6',
+        extendedProps: {
+          description: goal.description,
+          specific: goal.specific,
+          measurable: goal.measurable,
+        },
+        editable: false,
+      })));
     }
     
     if (schedules) {
@@ -43,6 +83,7 @@ export default function CalendarView() {
         extendedProps: {
           description: 'Daily learning schedule',
         },
+        editable: true,
       })));
     }
     
@@ -53,7 +94,7 @@ export default function CalendarView() {
     <Card className="p-6">
       <div className="h-[600px]">
         <FullCalendar
-          plugins={[dayGridPlugin]}
+          plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           headerToolbar={{
             left: 'prev,next today',
@@ -63,6 +104,8 @@ export default function CalendarView() {
           events={getEvents()}
           eventContent={renderEventContent}
           height="100%"
+          editable={true}
+          eventDrop={handleEventDrop}
         />
       </div>
     </Card>
