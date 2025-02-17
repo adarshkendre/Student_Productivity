@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertGoalSchema, insertLearningSchema } from "@shared/schema";
-import { generateSchedule } from "./services/ai"; // Updated import
+import { generateSchedule } from "./services/ai";
 import { scheduleRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -53,12 +53,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(schedules);
   });
 
-  app.post("/api/schedules/generate", async (req, res) => { //Updated route handler
+  app.post("/api/schedules/generate", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const requestData = scheduleRequestSchema.parse(req.body);
 
     try {
-      const generatedSchedule = await generateSchedule(requestData);
+      // Get today's goals for schedule generation
+      const goals = await storage.getGoals(req.user.id);
+      const generatedSchedule = await generateSchedule(requestData, goals);
       const schedule = await storage.createSchedule(req.user.id, generatedSchedule);
       res.status(201).json(schedule);
     } catch (error: any) {
