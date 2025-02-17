@@ -38,6 +38,13 @@ export default function GoalForm() {
       const res = await apiRequest("POST", "/api/schedules/generate", data);
       return res.json();
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
+      toast({
+        title: "Schedule generated",
+        description: "Learning schedule has been created based on your goal.",
+      });
+    },
     onError: (error: Error) => {
       toast({
         title: "Failed to generate schedule",
@@ -52,23 +59,13 @@ export default function GoalForm() {
       const res = await apiRequest("POST", "/api/goals", goal);
       return res.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (goal) => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       form.reset();
       toast({
         title: "Goal created",
         description: "Your goal has been successfully created.",
       });
-
-      // Generate a new schedule after goal creation
-      if (user) {
-        const scheduleRequest: ScheduleRequest = {
-          wakeUpTime: user.wakeUpTime || "06:00",
-          sleepTime: user.sleepTime || "22:00",
-          preferences: [],
-        };
-        await generateScheduleMutation.mutateAsync(scheduleRequest);
-      }
     },
     onError: (error: Error) => {
       toast({
@@ -78,6 +75,31 @@ export default function GoalForm() {
       });
     },
   });
+
+  const handleGenerateSchedule = async () => {
+    if (!user) return;
+
+    const formData = form.getValues();
+    if (!formData.title || !formData.description || !formData.targetDate) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all fields before generating a schedule.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const scheduleRequest: ScheduleRequest = {
+      wakeUpTime: user.wakeUpTime || "06:00",
+      sleepTime: user.sleepTime || "22:00",
+      preferences: [],
+      goalTitle: formData.title,
+      goalDescription: formData.description,
+      targetDate: formData.targetDate,
+    };
+
+    await generateScheduleMutation.mutateAsync(scheduleRequest);
+  };
 
   return (
     <Card className="p-6">
@@ -136,13 +158,24 @@ export default function GoalForm() {
             )}
           />
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={createGoalMutation.isPending || generateScheduleMutation.isPending}
-          >
-            Create Goal
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={createGoalMutation.isPending}
+            >
+              Create Goal
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={handleGenerateSchedule}
+              disabled={generateScheduleMutation.isPending}
+            >
+              Generate Learning Schedule
+            </Button>
+          </div>
         </form>
       </Form>
     </Card>

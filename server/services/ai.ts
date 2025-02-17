@@ -1,43 +1,47 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ScheduleRequest, Goal } from "@shared/schema";
-import { format } from "date-fns";
+import { ScheduleRequest } from "@shared/schema";
+import { addDays, differenceInDays, format } from "date-fns";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-export async function generateSchedule(request: ScheduleRequest, goals: Goal[]): Promise<string> {
-  const { wakeUpTime, sleepTime } = request;
+export async function generateSchedule(request: ScheduleRequest): Promise<string> {
+  const { wakeUpTime, sleepTime, goalTitle, goalDescription, targetDate } = request;
 
-  if (goals.length === 0) {
-    return JSON.stringify({
-      "message": "No goals found for scheduling.",
-      "schedule": {}
-    });
-  }
+  const targetDateTime = new Date(targetDate);
+  const daysUntilTarget = differenceInDays(targetDateTime, new Date()) + 1;
 
-  const prompt = `Create a daily schedule as a valid JSON object to achieve this goal:
+  const prompt = `Create a detailed ${daysUntilTarget}-day learning schedule to achieve the following goal:
 
-Goal Details:
-${goals.map(goal => `- Title: "${goal.title}"
-  Description: "${goal.description}"
-  Target Date: "${format(new Date(goal.targetDate), 'PPP')}"`).join('\n')}
-
-Time Constraints:
-- Wake up time: ${wakeUpTime}
-- Sleep time: ${sleepTime}
+Goal: ${goalTitle}
+Description: ${goalDescription}
+Number of Days: ${daysUntilTarget}
 
 Requirements:
-1. Return ONLY a valid JSON object with time slots as keys (in HH:MM format) and activities as string values
-2. Include focused work sessions, breaks, and checkpoints
-3. Focus only on activities that help achieve the goal
-4. Use 24-hour time format (e.g. "09:00", "14:30")
-5. Include double quotes around all strings
+1. Break down the learning path into ${daysUntilTarget} days
+2. For each day:
+   - Specify what topics to learn
+   - Include practice exercises or tasks
+   - Add progress checkpoints
+3. Follow a logical progression (basics → advanced)
+4. Include short breaks between study sessions
+5. Working hours: ${wakeUpTime} to ${sleepTime}
+
+Return the response as a JSON object where:
+- Keys are the days (e.g. "Day 1", "Day 2")
+- Values are objects with "topics" (array of strings) and "schedule" (object with time slots)
 
 Example format:
 {
-  "09:00": "Start work on Python basics - Variables and Data Types",
-  "10:30": "Take a short break",
-  "10:45": "Continue with Python Control Structures"
+  "Day 1": {
+    "topics": ["Python Basics", "Variables", "Data Types"],
+    "schedule": {
+      "09:00": "Introduction to Python basics",
+      "10:30": "Practice with variables",
+      "11:00": "Short break",
+      "11:15": "Data types exercises"
+    }
+  }
 }`;
 
   try {
@@ -51,7 +55,7 @@ Example format:
     // Ensure the response is valid JSON
     try {
       const parsed = JSON.parse(text);
-      return JSON.stringify(parsed); // Re-stringify to ensure proper formatting
+      return JSON.stringify(parsed);
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
 
@@ -59,7 +63,6 @@ Example format:
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const extracted = jsonMatch[0];
-        // Verify the extracted JSON is valid
         try {
           const parsed = JSON.parse(extracted);
           return JSON.stringify(parsed);

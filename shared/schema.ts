@@ -54,6 +54,9 @@ export const scheduleRequestSchema = z.object({
   wakeUpTime: z.string(),
   sleepTime: z.string(),
   preferences: z.array(z.string()),
+  goalTitle: z.string(),
+  goalDescription: z.string(),
+  targetDate: z.string(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
