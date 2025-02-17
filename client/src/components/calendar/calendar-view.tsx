@@ -95,11 +95,13 @@ export default function CalendarView() {
       <div className="h-[600px]">
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
+          initialView="dayGridWeek"
+          duration={{ weeks: 1 }}
+          firstDay={0}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth'
+            right: 'dayGridWeek'
           }}
           events={getEvents()}
           eventContent={renderEventContent}
