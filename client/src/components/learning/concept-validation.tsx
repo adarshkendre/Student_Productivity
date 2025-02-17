@@ -12,7 +12,12 @@ interface Message {
   content: string;
 }
 
-export default function ConceptValidation() {
+interface ConceptValidationProps {
+  topic?: string;
+  onValidated?: (success: boolean) => void;
+}
+
+export default function ConceptValidation({ topic, onValidated }: ConceptValidationProps) {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([{
     type: "bot",
@@ -27,6 +32,8 @@ export default function ConceptValidation() {
     },
     onSuccess: (response) => {
       setMessages(prev => [...prev, { type: "bot", content: response.message }]);
+      const success = !response.message.toLowerCase().includes('incorrect');
+      onValidated?.(success);
     },
     onError: (error: Error) => {
       toast({
