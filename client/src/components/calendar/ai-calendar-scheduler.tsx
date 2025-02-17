@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Check, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogHeader, DialogTitle, DialogContent } from '@/components/ui/dialog'; // Import Dialog components
+import { Dialog, DialogHeader, DialogTitle, DialogContent } from '@/components/ui/dialog';
+import ConceptValidation from '@/components/learning/concept-validation'; // Import Dialog components
 
 
 interface DailyGoal {
