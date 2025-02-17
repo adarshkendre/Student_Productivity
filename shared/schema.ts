@@ -6,6 +6,8 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  wakeUpTime: text("wake_up_time").default("06:00").notNull(),
+  sleepTime: text("sleep_time").default("22:00").notNull(),
 });
 
 export const goals = pgTable("goals", {
@@ -38,6 +40,9 @@ export const schedules = pgTable("schedules", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+}).extend({
+  wakeUpTime: z.string().default("06:00"),
+  sleepTime: z.string().default("22:00"),
 });
 
 export const insertGoalSchema = createInsertSchema(goals)

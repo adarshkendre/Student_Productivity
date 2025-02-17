@@ -6,6 +6,7 @@ import LearningForm from "@/components/learning/learning-form";
 import LearningList from "@/components/learning/learning-list";
 import ScheduleGenerator from "@/components/schedule/schedule-generator";
 import ScheduleList from "@/components/schedule/schedule-list";
+import CalendarView from "@/components/calendar/calendar-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function HomePage() {
@@ -30,12 +31,17 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="goals">
+        <Tabs defaultValue="calendar">
           <TabsList className="mb-8">
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="learnings">Daily Learnings</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="calendar">
+            <CalendarView />
+          </TabsContent>
 
           <TabsContent value="goals" className="space-y-8">
             <GoalForm />

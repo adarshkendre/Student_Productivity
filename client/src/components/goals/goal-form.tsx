@@ -1,12 +1,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGoalSchema, InsertGoal } from "@shared/schema";
+import { insertGoalSchema, InsertGoal, scheduleRequestSchema, ScheduleRequest } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Form,
   FormControl,
@@ -20,6 +21,7 @@ import { Card } from "@/components/ui/card";
 export default function GoalForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const form = useForm<InsertGoal>({
     resolver: zodResolver(insertGoalSchema),
@@ -35,18 +37,42 @@ export default function GoalForm() {
     },
   });
 
+  const generateScheduleMutation = useMutation({
+    mutationFn: async (data: ScheduleRequest) => {
+      const res = await apiRequest("POST", "/api/schedules/generate", data);
+      return res.json();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to generate schedule",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createGoalMutation = useMutation({
     mutationFn: async (goal: InsertGoal) => {
       const res = await apiRequest("POST", "/api/goals", goal);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       form.reset();
       toast({
         title: "Goal created",
         description: "Your goal has been successfully created.",
       });
+
+      // Generate a new schedule after goal creation
+      if (user) {
+        const scheduleRequest: ScheduleRequest = {
+          wakeUpTime: user.wakeUpTime || "06:00",
+          sleepTime: user.sleepTime || "22:00",
+          preferences: [],
+        };
+        await generateScheduleMutation.mutateAsync(scheduleRequest);
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -168,7 +194,7 @@ export default function GoalForm() {
           <Button
             type="submit"
             className="w-full"
-            disabled={createGoalMutation.isPending}
+            disabled={createGoalMutation.isPending || generateScheduleMutation.isPending}
           >
             Create Goal
           </Button>
