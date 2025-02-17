@@ -21,8 +21,8 @@ export default function ScheduleList() {
 
   const parseSchedule = (scheduleStr: string) => {
     try {
-      const parsed = JSON.parse(scheduleStr);
-      if (parsed.message) {
+      const parsed = typeof scheduleStr === 'string' ? JSON.parse(scheduleStr) : scheduleStr;
+      if (parsed?.message) {
         return { isMessage: true, content: parsed.message };
       }
       return { isMessage: false, content: parsed };

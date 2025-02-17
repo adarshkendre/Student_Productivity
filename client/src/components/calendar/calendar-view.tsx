@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import { useQuery } from '@tanstack/react-query';
-import { Goal } from '@shared/schema';
+import { Goal, Schedule } from '@shared/schema';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 
