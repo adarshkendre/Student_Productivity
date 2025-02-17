@@ -1,24 +1,18 @@
-
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Goal, Schedule } from '@shared/schema';
+import { Schedule } from '@shared/schema';
 import { Card } from '@/components/ui/card';
-import { format } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CalendarView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [editingEvent, setEditingEvent] = useState(null);
 
-  const { data: goals } = useQuery<Goal[]>({
-    queryKey: ["/api/goals"],
-  });
-  
   const { data: schedules } = useQuery<Schedule[]>({
     queryKey: ["/api/schedules"],
   });
@@ -56,39 +50,49 @@ export default function CalendarView() {
 
   const getEvents = useCallback(() => {
     const events = [];
-    
-    if (goals) {
-      events.push(...goals.map(goal => ({
-        id: `goal-${goal.id}`,
-        title: goal.title,
-        start: format(new Date(goal.targetDate), 'yyyy-MM-dd'),
-        allDay: true,
-        backgroundColor: goal.completed ? '#22c55e' : '#3b82f6',
-        extendedProps: {
-          description: goal.description,
-          specific: goal.specific,
-          measurable: goal.measurable,
-        },
-        editable: false,
-      })));
-    }
-    
+
     if (schedules) {
-      events.push(...schedules.map(schedule => ({
-        id: `schedule-${schedule.id}`,
-        title: 'Learning Schedule',
-        start: format(new Date(schedule.date), 'yyyy-MM-dd'),
-        allDay: true,
-        backgroundColor: '#10b981',
-        extendedProps: {
-          description: 'Daily learning schedule',
-        },
-        editable: true,
-      })));
+      schedules.forEach(schedule => {
+        try {
+          const parsedSchedule = JSON.parse(schedule.schedule);
+          const startDate = new Date(schedule.date);
+
+          Object.entries(parsedSchedule).forEach(([day, data]: [string, any], index) => {
+            const currentDate = addDays(startDate, index);
+
+            // Add topics as an all-day event
+            if (data.topics) {
+              events.push({
+                id: `schedule-${schedule.id}-topics-${index}`,
+                title: `Topics: ${data.topics.join(", ")}`,
+                start: format(currentDate, 'yyyy-MM-dd'),
+                allDay: true,
+                backgroundColor: '#3b82f6',
+                classNames: ['schedule-topics'],
+              });
+            }
+
+            // Add schedule items as timed events
+            if (data.schedule) {
+              Object.entries(data.schedule).forEach(([time, activity]) => {
+                events.push({
+                  id: `schedule-${schedule.id}-activity-${index}-${time}`,
+                  title: activity as string,
+                  start: `${format(currentDate, 'yyyy-MM-dd')}T${time}`,
+                  backgroundColor: '#10b981',
+                  classNames: ['schedule-activity'],
+                });
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing schedule:', error);
+        }
+      });
     }
-    
+
     return events;
-  }, [goals, schedules]);
+  }, [schedules]);
 
   return (
     <Card className="p-6">
@@ -101,13 +105,15 @@ export default function CalendarView() {
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridWeek'
+            right: 'dayGridWeek,dayGridMonth'
           }}
           events={getEvents()}
           eventContent={renderEventContent}
           height="100%"
           editable={true}
           eventDrop={handleEventDrop}
+          slotMinTime={schedules?.[0]?.wakeUpTime || '06:00:00'}
+          slotMaxTime={schedules?.[0]?.sleepTime || '22:00:00'}
         />
       </div>
     </Card>
@@ -118,9 +124,11 @@ function renderEventContent(eventInfo: any) {
   return (
     <div className="p-2">
       <div className="font-semibold">{eventInfo.event.title}</div>
-      <div className="text-xs mt-1 opacity-75">
-        {eventInfo.event.extendedProps.specific}
-      </div>
+      {eventInfo.event.extendedProps.description && (
+        <div className="text-xs mt-1 opacity-75">
+          {eventInfo.event.extendedProps.description}
+        </div>
+      )}
     </div>
   );
 }

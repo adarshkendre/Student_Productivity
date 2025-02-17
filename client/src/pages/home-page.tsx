@@ -11,9 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserCircle } from "lucide-react";
+import { useState } from "react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
+  const [activeTab, setActiveTab] = useState("schedule");
+
+  const handleScheduleGenerated = () => {
+    setActiveTab("calendar");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,7 +56,7 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="schedule">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-8">
             <TabsTrigger value="schedule">Learning Schedule</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -58,7 +64,7 @@ export default function HomePage() {
           </TabsList>
 
           <TabsContent value="schedule">
-            <LearningScheduleForm />
+            <LearningScheduleForm onScheduleGenerated={handleScheduleGenerated} />
           </TabsContent>
 
           <TabsContent value="calendar">

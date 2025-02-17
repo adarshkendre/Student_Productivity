@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
 
-export default function LearningScheduleForm() {
+export default function LearningScheduleForm({ onScheduleGenerated }: { onScheduleGenerated: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -50,8 +50,9 @@ export default function LearningScheduleForm() {
       });
       toast({
         title: "Schedule generated",
-        description: "Your learning schedule has been created.",
+        description: "Your learning schedule has been created and added to the calendar.",
       });
+      onScheduleGenerated(); // Navigate to calendar after success
     },
     onError: (error: Error) => {
       toast({
