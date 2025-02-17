@@ -28,6 +28,13 @@ export const learnings = pgTable("learnings", {
   date: timestamp("date").defaultNow().notNull(),
 });
 
+export const schedules = pgTable("schedules", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: timestamp("date").defaultNow().notNull(),
+  schedule: text("schedule").notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -42,9 +49,17 @@ export const insertGoalSchema = createInsertSchema(goals)
 export const insertLearningSchema = createInsertSchema(learnings)
   .omit({ id: true, userId: true, date: true });
 
+export const scheduleRequestSchema = z.object({
+  wakeUpTime: z.string(),
+  sleepTime: z.string(),
+  preferences: z.array(z.string()),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Learning = typeof learnings.$inferSelect;
 export type InsertLearning = z.infer<typeof insertLearningSchema>;
+export type Schedule = typeof schedules.$inferSelect;
+export type ScheduleRequest = z.infer<typeof scheduleRequestSchema>;

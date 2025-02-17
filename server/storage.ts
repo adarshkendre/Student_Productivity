@@ -4,6 +4,13 @@ import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
+interface Schedule {
+  id: number;
+  userId: number;
+  date: Date;
+  schedule: string;
+}
+
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -16,6 +23,9 @@ export interface IStorage {
   getLearnings(userId: number): Promise<Learning[]>;
   createLearning(userId: number, learning: InsertLearning): Promise<Learning>;
   
+  getSchedules(userId: number): Promise<Schedule[]>;
+  createSchedule(userId: number, schedule: string): Promise<Schedule>;
+  
   sessionStore: session.Store;
 }
 
@@ -23,6 +33,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private goals: Map<number, Goal>;
   private learnings: Map<number, Learning>;
+  private schedules: Map<number, Schedule>;
   private currentId: number;
   sessionStore: session.Store;
 
@@ -30,6 +41,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.goals = new Map();
     this.learnings = new Map();
+    this.schedules = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -95,6 +107,24 @@ export class MemStorage implements IStorage {
     };
     this.learnings.set(id, learning);
     return learning;
+  }
+
+  async getSchedules(userId: number): Promise<Schedule[]> {
+    return Array.from(this.schedules.values())
+      .filter((schedule) => schedule.userId === userId)
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  async createSchedule(userId: number, scheduleData: string): Promise<Schedule> {
+    const id = this.currentId++;
+    const schedule: Schedule = {
+      id,
+      userId,
+      date: new Date(),
+      schedule: scheduleData,
+    };
+    this.schedules.set(id, schedule);
+    return schedule;
   }
 }
 

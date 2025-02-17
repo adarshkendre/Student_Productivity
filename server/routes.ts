@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertGoalSchema, insertLearningSchema } from "@shared/schema";
+import { generateSchedule } from "./services/ai"; // Updated import
+import { scheduleRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -42,6 +44,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const learningData = insertLearningSchema.parse(req.body);
     const learning = await storage.createLearning(req.user.id, learningData);
     res.status(201).json(learning);
+  });
+
+  // Schedule API
+  app.get("/api/schedules", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const schedules = await storage.getSchedules(req.user.id);
+    res.json(schedules);
+  });
+
+  app.post("/api/schedules/generate", async (req, res) => { //Updated route handler
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const requestData = scheduleRequestSchema.parse(req.body);
+
+    try {
+      const generatedSchedule = await generateSchedule(requestData);
+      const schedule = await storage.createSchedule(req.user.id, generatedSchedule);
+      res.status(201).json(schedule);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
   });
 
   const httpServer = createServer(app);
