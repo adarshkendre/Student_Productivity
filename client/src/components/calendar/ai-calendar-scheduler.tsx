@@ -38,8 +38,11 @@ const ConceptValidationDialog: React.FC<ConceptValidationProps> = ({
 }) => {
   return (
     <DialogContent className="sm:max-w-[90%] max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
+      <DialogHeader className="flex justify-between items-center">
         <DialogTitle>Concept Validation: {topic}</DialogTitle>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
       </DialogHeader>
       <div className="mt-4">
         <ConceptValidation 
