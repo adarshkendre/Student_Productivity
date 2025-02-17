@@ -3,8 +3,10 @@ import { Schedule } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Loader2, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ScheduleList() {
+  const { toast } = useToast();
   const { data: schedules, isLoading } = useQuery<Schedule[]>({
     queryKey: ["/api/schedules"],
   });
@@ -16,6 +18,24 @@ export default function ScheduleList() {
       </div>
     );
   }
+
+  const parseSchedule = (scheduleStr: string) => {
+    try {
+      const parsed = JSON.parse(scheduleStr);
+      if (parsed.message) {
+        return { isMessage: true, content: parsed.message };
+      }
+      return { isMessage: false, content: parsed };
+    } catch (error) {
+      console.error('Schedule parsing error:', error, 'Schedule string:', scheduleStr);
+      toast({
+        title: "Error",
+        description: "Failed to parse schedule data",
+        variant: "destructive",
+      });
+      return { isMessage: true, content: "Invalid schedule format" };
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -29,23 +49,32 @@ export default function ScheduleList() {
           No schedules generated yet. Create one above to get started!
         </Card>
       ) : (
-        schedules?.map((schedule) => (
-          <Card key={schedule.id} className="p-6">
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Generated on: {format(new Date(schedule.date), "PPp")}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(JSON.parse(schedule.schedule)).map(([time, activity]) => (
-                  <div key={time} className="flex items-start gap-2">
-                    <span className="font-semibold min-w-[80px]">{time}:</span>
-                    <span>{activity as string}</span>
+        schedules?.map((schedule) => {
+          const parsedSchedule = parseSchedule(schedule.schedule);
+
+          return (
+            <Card key={schedule.id} className="p-6">
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  Generated on: {format(new Date(schedule.date), "PPp")}
+                </div>
+
+                {parsedSchedule.isMessage ? (
+                  <p className="text-muted-foreground">{parsedSchedule.content}</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(parsedSchedule.content).map(([time, activity]) => (
+                      <div key={time} className="flex items-start gap-2">
+                        <span className="font-semibold min-w-[80px]">{time}:</span>
+                        <span>{activity as string}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          </Card>
-        ))
+            </Card>
+          );
+        })
       )}
     </div>
   );
