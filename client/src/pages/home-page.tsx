@@ -8,6 +8,13 @@ import ScheduleGenerator from "@/components/schedule/schedule-generator";
 import ScheduleList from "@/components/schedule/schedule-list";
 import CalendarView from "@/components/calendar/calendar-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserCircle } from "lucide-react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -18,14 +25,30 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Student Progress Tracker</h1>
           <div className="flex items-center gap-4">
-            <span>Welcome, {user?.username}!</span>
-            <Button
-              variant="outline"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-            >
-              Logout
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <UserCircle className="h-6 w-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="p-2">
+                  <p className="font-medium">{user?.username}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Wake up: {user?.wakeUpTime}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Sleep: {user?.sleepTime}
+                  </p>
+                </div>
+                <DropdownMenuItem
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

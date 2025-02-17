@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ScheduleRequest, Goal } from "@shared/schema";
-import { isToday, parseISO } from "date-fns";
+import { format } from "date-fns";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -8,36 +8,29 @@ const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 export async function generateSchedule(request: ScheduleRequest, goals: Goal[]): Promise<string> {
   const { wakeUpTime, sleepTime } = request;
 
-  // Filter goals due today
-  const todaysGoals = goals.filter(goal => 
-    !goal.completed && isToday(parseISO(goal.targetDate.toString()))
-  );
-
-  if (todaysGoals.length === 0) {
+  if (goals.length === 0) {
     return JSON.stringify({
-      "message": "No goals scheduled for today."
+      "message": "No goals found for scheduling."
     });
   }
 
-  const prompt = `Create a focused schedule for achieving today's goals:
+  const prompt = `Create a focused schedule to help achieve the following goal(s):
 
-Goals for today:
-${todaysGoals.map(goal => `- ${goal.title}
-  Specific: ${goal.specific}
-  Measurable: ${goal.measurable}
-  Achievable: ${goal.achievable}`).join('\n')}
+${goals.map(goal => `Goal: ${goal.title}
+Description: ${goal.description}
+Target Date: ${format(new Date(goal.targetDate), 'PPP')}`).join('\n\n')}
 
 Time constraints:
 - Wake up time: ${wakeUpTime}
 - Sleep time: ${sleepTime}
 
-Generate a schedule that helps achieve these specific goals. Include:
-1. Focused work sessions for each goal
-2. Short breaks between sessions
-3. Progress tracking points
+Generate a schedule that helps achieve these goals. Include:
+1. Focused work sessions
+2. Short breaks
+3. Progress checkpoints
 
-Format the response as a JSON object with time slots as keys and goal-related activities as values.
-Only include activities related to achieving these goals.`;
+Format the response as a JSON object with time slots as keys and activities as values.
+Focus only on activities that directly contribute to achieving the specified goals.`;
 
   try {
     const result = await model.generateContent(prompt);

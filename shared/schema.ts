@@ -17,10 +17,6 @@ export const goals = pgTable("goals", {
   description: text("description").notNull(),
   targetDate: timestamp("target_date").notNull(),
   completed: boolean("completed").default(false).notNull(),
-  specific: text("specific").notNull(),
-  measurable: text("measurable").notNull(),
-  achievable: text("achievable").notNull(),
-  relevant: text("relevant").notNull(),
 });
 
 export const learnings = pgTable("learnings", {

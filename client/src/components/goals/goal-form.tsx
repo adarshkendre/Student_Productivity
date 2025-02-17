@@ -29,10 +29,6 @@ export default function GoalForm() {
       title: "",
       description: "",
       targetDate: "",
-      specific: "",
-      measurable: "",
-      achievable: "",
-      relevant: "",
       completed: false,
     },
   });
@@ -98,7 +94,7 @@ export default function GoalForm() {
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="What do you want to achieve?" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,7 +108,11 @@ export default function GoalForm() {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea {...field} />
+                  <Textarea 
+                    placeholder="Describe your goal in detail..."
+                    className="min-h-[100px]"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -126,70 +126,15 @@ export default function GoalForm() {
               <FormItem>
                 <FormLabel>Target Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    type="date" 
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="specific"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Specific</FormLabel>
-                  <FormControl>
-                    <Input placeholder="What exactly do you want to achieve?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="measurable"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Measurable</FormLabel>
-                  <FormControl>
-                    <Input placeholder="How will you measure success?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="achievable"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Achievable</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Is this realistically achievable?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="relevant"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Relevant</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Why is this goal important?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
           <Button
             type="submit"
