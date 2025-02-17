@@ -2,9 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertGoalSchema, insertLearningSchema } from "@shared/schema";
 import { generateSchedule } from "./services/ai";
 import { scheduleRequestSchema } from "@shared/schema";
+import { validateConcept } from "./services/ai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -58,11 +58,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const requestData = scheduleRequestSchema.parse(req.body);
 
     try {
-      // Get today's goals for schedule generation
-      const goals = await storage.getGoals(req.user.id);
-      const generatedSchedule = await generateSchedule(requestData, goals);
+      const generatedSchedule = await generateSchedule(requestData);
       const schedule = await storage.createSchedule(req.user.id, generatedSchedule);
       res.status(201).json(schedule);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/validate-concept", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { content } = req.body;
+
+    try {
+      const validation = await validateConcept(content);
+      res.json({ message: validation });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

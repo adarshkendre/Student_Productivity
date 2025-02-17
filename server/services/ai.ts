@@ -52,7 +52,6 @@ Example format:
     // Log the AI response for debugging
     console.log('AI Response:', text);
 
-    // Ensure the response is valid JSON
     try {
       const parsed = JSON.parse(text);
       return JSON.stringify(parsed);
@@ -71,7 +70,6 @@ Example format:
         }
       }
 
-      // If all else fails, return a default schedule
       return JSON.stringify({
         "message": "Failed to generate schedule",
         "schedule": {}
@@ -80,5 +78,25 @@ Example format:
   } catch (error: any) {
     console.error('Schedule Generation Error:', error);
     throw new Error(`Failed to generate schedule: ${error.message}`);
+  }
+}
+
+export async function validateConcept(content: string): Promise<string> {
+  const prompt = `You are a helpful learning assistant. A student has shared what they learned today. 
+Your task is to:
+1. Validate if their understanding is correct
+2. If correct, provide positive reinforcement and suggest a related advanced topic
+3. If incorrect or incomplete, gently correct their understanding and provide an example
+
+Student's learning: "${content}"
+
+Respond conversationally and encouragingly, like a supportive teacher.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    return response.text();
+  } catch (error: any) {
+    throw new Error(`Failed to validate concept: ${error.message}`);
   }
 }

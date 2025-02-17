@@ -1,12 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import GoalForm from "@/components/goals/goal-form";
-import GoalList from "@/components/goals/goal-list";
-import LearningForm from "@/components/learning/learning-form";
-import LearningList from "@/components/learning/learning-list";
-import ScheduleGenerator from "@/components/schedule/schedule-generator";
-import ScheduleList from "@/components/schedule/schedule-list";
+import LearningScheduleForm from "@/components/learning/learning-schedule-form";
 import CalendarView from "@/components/calendar/calendar-view";
+import ConceptValidation from "@/components/learning/concept-validation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -23,7 +19,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Student Progress Tracker</h1>
+          <h1 className="text-2xl font-bold">Learning Progress Tracker</h1>
           <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -54,31 +50,23 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="calendar">
+        <Tabs defaultValue="schedule">
           <TabsList className="mb-8">
+            <TabsTrigger value="schedule">Learning Schedule</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="learnings">Daily Learnings</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="validate">Concept Validation</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="schedule">
+            <LearningScheduleForm />
+          </TabsContent>
 
           <TabsContent value="calendar">
             <CalendarView />
           </TabsContent>
 
-          <TabsContent value="goals" className="space-y-8">
-            <GoalForm />
-            <GoalList />
-          </TabsContent>
-
-          <TabsContent value="learnings" className="space-y-8">
-            <LearningForm />
-            <LearningList />
-          </TabsContent>
-
-          <TabsContent value="schedule" className="space-y-8">
-            <ScheduleGenerator />
-            <ScheduleList />
+          <TabsContent value="validate">
+            <ConceptValidation />
           </TabsContent>
         </Tabs>
       </main>
