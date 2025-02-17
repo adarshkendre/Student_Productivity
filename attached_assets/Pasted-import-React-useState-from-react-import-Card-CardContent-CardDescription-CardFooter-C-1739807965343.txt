@@ -1,0 +1,214 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+
+interface LoginPageProps {
+  onLoginSuccess: () => void;
+  onForgotPassword?: () => void;
+}
+
+interface User {
+  username: string;
+  password: string;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onForgotPassword }) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false); // Toggle between login and sign-up
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const validateForm = (): boolean => {
+    if (!formData.username.trim()) {
+      setError('Username is required');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Store user data in localStorage
+      const userData: User = {
+        username: formData.username,
+        password: formData.password // In real app, never store plain passwords
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      // Call the success callback
+      onLoginSuccess();
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      // Simulate API call for sign-up
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Store new user data in localStorage
+      const newUser: User = {
+        username: formData.username,
+        password: formData.password // In real app, never store plain passwords
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(newUser));
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      // Call the success callback
+      onLoginSuccess();
+    } catch (err) {
+      setError('Sign up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            {isSignUp ? 'Create New Account' : 'Welcome Back'}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {isSignUp ? 'Sign up to get started' : 'Sign in to your account to continue'}
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={isSignUp ? handleSignUp : handleLogin}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-full"
+                placeholder="Enter your username"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full pr-10"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-4">
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isSignUp ? 'Signing up...' : 'Signing in...'}
+                </>
+              ) : (
+                isSignUp ? 'Sign Up' : 'Sign In'
+              )}
+            </Button>
+            
+            {onForgotPassword && !isSignUp && (
+              <div className="text-sm text-center">
+                <Button
+                  variant="link"
+                  onClick={onForgotPassword}
+                  className="text-blue-600 hover:text-blue-500"
+                >
+                  Forgot your password?
+                </Button>
+              </div>
+            )}
+
+            <div className="text-sm text-center">
+              <Button
+                variant="link"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-600 hover:text-blue-500"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : 'Create a new account'}
+              </Button>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+};
+
+export default LoginPage;
