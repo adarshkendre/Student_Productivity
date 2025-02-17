@@ -11,12 +11,18 @@ interface DailyGoal {
   topic: string;
   description: string;
   completed: boolean;
-  validated: boolean; // Added validation status
+  validated: boolean;
 }
 
 interface DaySchedule {
   date: Date;
   goals: DailyGoal[];
+  streak: number;
+}
+
+interface Streak {
+  current: number;
+  best: number;
 }
 
 interface ConceptValidationProps {
@@ -55,6 +61,8 @@ const AICalendarScheduler: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false); // State for the validation dialog
   const [validationTopic, setValidationTopic] = useState(''); // State for the topic to validate
+  const [streak, setStreak] = useState<Streak>({ current: 0, best: 0 });
+  const [numWeeks, setNumWeeks] = useState(4);
 
   const generateAISchedule = async (startDate: Date): Promise<DaySchedule[]> => {
     // This is a simulation of AI-generated topics
@@ -89,7 +97,7 @@ const AICalendarScheduler: React.FC = () => {
     const days: DaySchedule[] = [];
     const currentDate = new Date(startDate);
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < numWeeks * 7; i++) { // Extended to multiple weeks
       const subject = topics[Math.floor(i / 7) % topics.length];
       const dayTopics = subject.subtopics[i % subject.subtopics.length];
 
@@ -110,7 +118,8 @@ const AICalendarScheduler: React.FC = () => {
             completed: false,
             validated: false // Initialize validation status
           }
-        ]
+        ],
+        streak: 0 // Initialize streak for each day
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -126,7 +135,7 @@ const AICalendarScheduler: React.FC = () => {
     };
 
     fetchSchedule();
-  }, [currentDate]);
+  }, [currentDate, numWeeks]);
 
   const toggleGoalCompletion = (dayIndex: number, goalId: string) => {
     setSchedule(prevSchedule => {
@@ -166,9 +175,19 @@ const AICalendarScheduler: React.FC = () => {
     <div>
       <Card className="w-full max-w-4xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            AI Learning Schedule
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              AI Learning Schedule
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm">
+                Current Streak: {streak.current} days
+              </div>
+              <div className="text-sm">
+                Best Streak: {streak.best} days
+              </div>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
