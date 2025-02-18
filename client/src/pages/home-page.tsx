@@ -61,6 +61,8 @@ export default function HomePage() {
             <TabsTrigger value="schedule">Learning Schedule</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="validate">Concept Validation</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule">
@@ -73,6 +75,26 @@ export default function HomePage() {
 
           <TabsContent value="validate">
             <ConceptValidation />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Notifications />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard 
+              goals={{
+                total: 10,
+                completed: 5
+              }}
+              learningsByDay={[
+                { date: "Mon", count: 3 },
+                { date: "Tue", count: 5 },
+                { date: "Wed", count: 2 },
+                { date: "Thu", count: 4 },
+                { date: "Fri", count: 6 }
+              ]}
+            />
           </TabsContent>
         </Tabs>
       </main>
