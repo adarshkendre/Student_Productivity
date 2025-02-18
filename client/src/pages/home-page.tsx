@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import LearningScheduleForm from "@/components/learning/learning-schedule-form";
 import CalendarView from "@/components/calendar/calendar-view";
 import ConceptValidation from "@/components/learning/concept-validation";
+import Notifications from "@/components/notifications/notifications";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -62,7 +63,6 @@ export default function HomePage() {
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="validate">Concept Validation</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule">
@@ -79,22 +79,6 @@ export default function HomePage() {
 
           <TabsContent value="notifications">
             <Notifications />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AnalyticsDashboard 
-              goals={{
-                total: 10,
-                completed: 5
-              }}
-              learningsByDay={[
-                { date: "Mon", count: 3 },
-                { date: "Tue", count: 5 },
-                { date: "Wed", count: 2 },
-                { date: "Thu", count: 4 },
-                { date: "Fri", count: 6 }
-              ]}
-            />
           </TabsContent>
         </Tabs>
       </main>
